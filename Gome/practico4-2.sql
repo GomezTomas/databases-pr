@@ -1,4 +1,5 @@
 -- PRACTICO 4 PARTE 2
+-- EJERCICIO 1 -> PELICULAS
 -- 1.1 IN
 select *
 from pelicula
@@ -11,6 +12,7 @@ where idioma = 'Inglés' and codigo_pelicula in(
         where extract(year from fecha_entrega) = 2006
         )
     );
+
 --1.1 EXISTS
 select *
 from pelicula p
@@ -33,16 +35,20 @@ where extract(year from e.fecha_entrega) = 2006 and d.tipo = 'N';
 --1.3
 select id_departamento, id_distribuidor, nombre
 from departamento
-where (id_departamento, id_distribuidor) not in (select e.id_departamento, e.id_distribuidor
-                          from empleado e
-                          where e.id_tarea in (select t.id_tarea
-                                               from tarea t
-                                               where (t.sueldo_maximo - t.sueldo_minimo) <= (t.sueldo_maximo * 0.1)));
+where (id_departamento, id_distribuidor) not in (
+    select e.id_departamento, e.id_distribuidor
+    from empleado e
+    where e.id_tarea in (
+        select t.id_tarea
+        from tarea t
+        where (t.sueldo_maximo - t.sueldo_minimo) <= (t.sueldo_maximo * 0.1)
+        )
+    );
 
 --1.4
 select count(*)
 from pelicula p
-where p.codigo_pelicula not in(
+where p.codigo_pelicula not in (
     select r.codigo_pelicula
     from renglon_entrega r
     where r.nro_entrega in (
@@ -87,5 +93,66 @@ where p.nombre_pais = 'ARGENTINA' and (e.porc_comision + 10.0) >= (
     where e1.id_empleado = d.jefe_departamento
     );
 
+--1.7
+select p.genero, count(*)
+from pelicula p
+where p.codigo_pelicula in(
+    select r.codigo_pelicula
+    from renglon_entrega r
+    where r.nro_entrega in(
+        select e.nro_entrega
+        from entrega e
+        where extract(year from fecha_entrega) >= 2010
+        )
+    )
+group by p.genero;
 
+--1.8
+select fecha_entrega, id_video, sum(cantidad)
+from entrega e join renglon_entrega re on e.nro_entrega = re.nro_entrega
+group by fecha_entrega, id_video
+order by fecha_entrega;
+
+--1.9
+select c.nombre_ciudad, count(id_empleado)
+from ciudad c join departamento d on c.id_ciudad = d.id_ciudad join empleado e on d.id_distribuidor = e.id_distribuidor and d.id_departamento = e.id_departamento
+where extract(year from age(now(), e.fecha_nacimiento)) >= 18
+group by c.nombre_ciudad
+having count(id_empleado) >= 30;
+
+
+--EJERCICIO 2 -> VOLUNTARIOS
+--2.1
+select i.nombre_institucion, count(*)
+from institucion i join voluntario v on i.id_institucion = v.id_institucion
+group by i.nombre_institucion
+order by nombre_institucion
+
+--2.2
+select count(distinct v.id_coordinador) as "Numero de coordinadores", nombre_pais, nombre_continente
+from voluntario v join voluntario v1 on v.id_coordinador = v1.nro_voluntario
+join institucion i on v.id_institucion = i.id_institucion
+join direccion d on i.id_direccion = d.id_direccion
+join unc_esq_voluntario.pais p on d.id_pais = p.id_pais
+join continente c on p.id_continente = c.id_continente
+group by nombre_pais, nombre_continente;
+
+--2.3
+select apellido, nombre, fecha_nacimiento
+from voluntario
+where id_institucion = (
+    select id_institucion
+    from voluntario
+    where apellido = 'Zlotkey'
+    )
+and apellido != 'Zlotkey'
+
+--2.4
+select nro_voluntario, apellido, horas_aportadas
+from voluntario
+where horas_aportadas > (
+    select avg(horas_aportadas)
+    from voluntario
+    )
+order by horas_aportadas
 
