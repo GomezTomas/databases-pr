@@ -126,7 +126,7 @@ having count(id_empleado) >= 30;
 select i.nombre_institucion, count(*)
 from institucion i join voluntario v on i.id_institucion = v.id_institucion
 group by i.nombre_institucion
-order by nombre_institucion
+order by nombre_institucion;
 
 --2.2
 select count(distinct v.id_coordinador) as "Numero de coordinadores", nombre_pais, nombre_continente
@@ -145,7 +145,7 @@ where id_institucion = (
     from voluntario
     where apellido = 'Zlotkey'
     )
-and apellido != 'Zlotkey'
+and apellido != 'Zlotkey';
 
 --2.4
 select nro_voluntario, apellido, horas_aportadas
@@ -154,5 +154,43 @@ where horas_aportadas > (
     select avg(horas_aportadas)
     from voluntario
     )
-order by horas_aportadas
+order by horas_aportadas;
 
+--EJERCICIO 3
+--3.1 opcion 1
+create table IF NOT EXISTS DistribuidorNac as
+    select d.id_distribuidor, d.nombre, d.direccion, d.telefono, n.nro_inscripcion, n.encargado, n.id_distrib_mayorista
+    from unc_esq_peliculas.distribuidor d join unc_esq_peliculas.nacional n on d.id_distribuidor = n.id_distribuidor;
+
+--3.1 opcion 2
+CREATE TABLE DistribuidorNac
+(
+    id_distribuidor numeric(5,0) NOT NULL,
+    nombre character varying(80) NOT NULL,
+    direccion character varying(120) NOT NULL,
+    telefono character varying(20),
+    nro_inscripcion numeric(8,0) NOT NULL,
+    encargado character varying(60) NOT NULL,
+    id_distrib_mayorista numeric(5,0),
+    CONSTRAINT pk_distribuidorNac PRIMARY KEY (id_distribuidor)
+);
+
+insert into distribuidornac (id_distribuidor, nombre, direccion, telefono, nro_inscripcion, encargado, id_distrib_mayorista),
+select d.id_distribuidor, d.nombre, d.direccion, d.telefono, n.nro_inscripcion, n.encargado, n.id_distrib_mayorista
+from unc_esq_peliculas.distribuidor d join unc_esq_peliculas.nacional n
+    on d.id_distribuidor = n.id_distribuidor;
+
+--3.2
+alter table DistribuidorNac add
+    codigo_pais varchar(5);
+
+--3.3
+update DistribuidorNac set codigo_pais = i.id_distribuidor
+from unc_esq_peliculas.internacional i
+where DistribuidorNac.id_distribuidor = i.id_distribuidor
+
+--3.4
+delete from distribuidornac where DistribuidorNac.id_distrib_mayorista is null;
+
+select *
+from distribuidornac
